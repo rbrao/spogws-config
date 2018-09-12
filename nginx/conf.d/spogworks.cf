@@ -1,0 +1,54 @@
+upstream django {
+    server unix:///mnt/vol1/soft/spogworks/proj/run/config.sock;
+}
+
+server {
+    listen      8000;
+    server_name www.spogworks.com; 
+    charset     utf-8;
+
+    gzip on;
+    gzip_disable "MSIE [1-6]\.(?!.*SV1)";
+
+    gzip_http_version 1.1;
+    gzip_vary on;
+    gzip_comp_level 6;
+    gzip_proxied any;
+    gzip_types text/plain text/html text/csv text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript text/x-js;
+    gzip_buffers 16 8k;
+
+    client_max_body_size 25M;
+    #add_header 'Access-Control-Allow-Origin' '*';
+    #add_header 'Access-Control-Allow-Origin' *;
+    #add_header 'X-Frame-Options' 'allow';
+    #add_header 'X-Frame-Options' 'ALLOW-FROM http://www.spogworks.com:8080';
+    
+    add_header X-Frame-Options 'ALLOW-FROM http://www.spogworks.com:8080/';
+    add_header X-Frame-Options 'ALLOW-FROM http://www.spogworks.com/';
+    error_page 404 /404.html;
+    location /404.html {
+	root   /mnt/vol1/soft/spogworks/proj/templates;
+    }
+
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+	root   /mnt/vol1/soft/spogworks/proj/templates;
+    }
+
+    location /media  {
+        alias /mnt/vol1/soft/spogworks/proj/media;
+    }
+
+    location /static {
+        alias /mnt/vol1/soft/spogworks/proj/static;
+    }
+
+    location / {
+	#add_header 'Access-Control-Allow-Origin' *;
+    	#add_header 'X-Frame-Options' 'ALLOW-FROM http://www.spogworks.com:8080';
+	#proxy_hide_header 'X-Frame-Options';
+    	#add_header 'X-Frame-Options' 'DENY';
+        uwsgi_pass  django;
+        include /etc/nginx/uwsgi_params;
+    }
+}
